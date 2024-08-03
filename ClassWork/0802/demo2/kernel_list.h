@@ -1,5 +1,5 @@
 /****************************************************************************************************************************************************************
- * @file         : /ClassWork/0802/demo2/kernel_list.h
+ * @file         : /Code/ClassWork/0802/demo2/kernel_list.h
  * @brief        : 内核链表实现
  * @date         : 2024-08-02 20:21:48
  * @version      : 1.0
@@ -8,7 +8,7 @@
 #define KERNEL_LIST_H
 
 /****************************************************************************************************************************************************************
- * @name: offsetof
+ * @name: OFFSETOF
  * @brief: 获取成员在结构体中的偏移量
  * @param {TYPE} - 结构体类型
  * @param {MEMBER} - 成员名
@@ -16,23 +16,22 @@
  * @date: 2024-08-03 09:10:10
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define offsetof(TYPE, MEMBER) ((size_t) & ((TYPE *)0)->MEMBER)
+#define OFFSETOF(TYPE, MEMBER) ((size_t) & ((TYPE *)0)->MEMBER)
 
 /****************************************************************************************************************************************************************
- * @name: container_of
+ * @name: CONTAINER_OF
  * @brief: 获取包含某成员的结构体指针
- * @param {void*} ptr - 成员指针
- * @param {type} type - 结构体类型
- * @param {member} member - 成员名
+ * @param {void*} PTR - 成员指针
+ * @param {TYPE} TYPE - 结构体类型
+ * @param {MEMBER} MEMBER - 成员名
  * @return {type*} - 结构体指针
  * @date: 2024-08-03 09:10:59
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define container_of(ptr, type, member)                                        \
+#define CONTAINER_OF(PTR, TYPE, MEMBER)                                        \
   ({                                                                           \
-    const typeof(((type *)0)->member) *__mptr = (ptr);                         \
-    /* 获取成员指针的偏移量 */                                       \
-    (type *)((char *)__mptr - offsetof(type, member));                         \
+    const typeof(((TYPE *)0)->MEMBER) *__mptr = (PTR);                         \
+    (TYPE *)((char *)__mptr - OFFSETOF(TYPE, MEMBER));                         \
   })
 
 /****************************************************************************************************************************************************************
@@ -58,130 +57,130 @@
 /****************************************************************************************************************************************************************
  * @name: LIST_HEAD_INIT
  * @brief: 初始化链表头
- * @param {struct list_head} name - 链表头
+ * @param {struct list_head} NAME - 链表头
  * @return {struct list_head} - 初始化后的链表头
  * @date: 2024-08-03 09:10:04
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define LIST_HEAD_INIT(name)                                                   \
-  { &(name), &(name) }
+#define LIST_HEAD_INIT(NAME)                                                   \
+  { &(NAME), &(NAME) }
 
 /****************************************************************************************************************************************************************
  * @name: LIST_HEAD
  * @brief: 定义并初始化链表头
- * @param {list_head} name - 链表头
+ * @param {list_head} NAME - 链表头
  * @return {*}
  * @date: 2024-08-03 09:11:44
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define LIST_HEAD(name) struct list_head name = LIST_HEAD_INIT(name)
+#define LIST_HEAD(NAME) struct list_head NAME = LIST_HEAD_INIT(NAME)
 
 /****************************************************************************************************************************************************************
  * @name: INIT_LIST_HEAD
  * @brief: 初始化链表头，将链表头的 `next` 和 `prev` 指针都指向自身
- * @param {struct list_head *} ptr 链表头指针
+ * @param {struct list_head *} PTR 链表头指针
  * @return {void}
  * @date: 2024-08-03 09:09:58
  * @version: 1.0
  * @note:
  *****************************************************************************************************************************************************************/
-#define INIT_LIST_HEAD(ptr)                                                    \
-  (ptr)->next = (ptr); /* 将指针的下一个节点指向自身 */           \
-  (ptr)->prev = (ptr) /* 将指针的前一个节点指向自身 */
+#define INIT_LIST_HEAD(PTR)                                                    \
+  (PTR)->next = (PTR);                                                         \
+  (PTR)->prev = (PTR)
 
 /****************************************************************************************************************************************************************
  * @name: DEFINE_LIST_HEAD
  * @brief: 定义并初始化一个链表头，并返回该链表头的对象
- * @param {struct list_head} name - 链表头的名称
+ * @param {struct list_head} NAME - 链表头的名称
  * @return {struct list_head} - 初始化后的链表头对象
  * @date: 2024-08-03 09:20:10
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define DEFINE_LIST_HEAD(name)                                                 \
-  LIST_HEAD(name);                                                           \
-  INIT_LIST_HEAD(&name)
+#define DEFINE_LIST_HEAD(NAME)                                                 \
+  LIST_HEAD(NAME);                                                             \
+  INIT_LIST_HEAD(&NAME)
 
 /****************************************************************************************************************************************************************
- * @name: list_entry
+ * @name: LIST_ENTRY
  * @brief: 获取链表元素结构体指针
- * @param {struct list_head*} ptr - 链表节点指针
- * @param {type} type - 结构体类型
- * @param {member} member - 成员名
+ * @param {struct list_head*} PTR - 链表节点指针
+ * @param {type} TYPE - 结构体类型
+ * @param {member} MEMBER - 成员名
  * @return {type*} - 结构体指针
  * @date: 2024-08-03 09:09:48
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_entry(ptr, type, member)                                          \
-  ((type *)((char *)(ptr)-offsetof(type, member)))
+#define LIST_ENTRY(PTR, TYPE, MEMBER)                                          \
+  ((TYPE *)((char *)(PTR) - OFFSETOF(TYPE, MEMBER)))
 
 /****************************************************************************************************************************************************************
- * @name: list_for_each
+ * @name: LIST_FOR_EACH
  * @brief: 遍历链表
- * @param {struct list_head*} pos - 用于遍历的指针
- * @param {struct list_head*} head - 链表头
+ * @param {struct list_head*} POS - 用于遍历的指针
+ * @param {struct list_head*} HEAD - 链表头
  * @return {*}
  * @date: 2024-08-03 09:09:43
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_for_each(pos, head)                                               \
-  for (pos = (head)->next; pos != (head); pos = pos->next)
+#define LIST_FOR_EACH(POS, HEAD)                                               \
+  for (POS = (HEAD)->next; POS != (HEAD); POS = POS->next)
 
 /****************************************************************************************************************************************************************
- * @name: list_for_each_prev
+ * @name: LIST_FOR_EACH_PREV
  * @brief: 反向遍历链表
- * @param {struct list_head*} pos - 用于遍历的指针
- * @param {struct list_head*} head - 链表头
+ * @param {struct list_head*} POS - 用于遍历的指针
+ * @param {struct list_head*} HEAD - 链表头
  * @return {*}
  * @date: 2024-08-03 09:09:10
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_for_each_prev(pos, head)                                          \
-  for (pos = (head)->prev; pos != (head); pos = pos->prev)
+#define LIST_FOR_EACH_PREV(POS, HEAD)                                          \
+  for (POS = (HEAD)->prev; POS != (HEAD); POS = POS->prev)
 
 /****************************************************************************************************************************************************************
- * @name: list_for_each_safe
+ * @name: LIST_FOR_EACH_SAFE
  * @brief: 遍历链表，安全地删除节点
- * @param {struct list_head*} pos - 用于遍历的指针
- * @param {struct list_head*} n - 临时存储下一个节点的指针
- * @param {struct list_head*} head - 链表头
+ * @param {struct list_head*} POS - 用于遍历的指针
+ * @param {struct list_head*} N - 临时存储下一个节点的指针
+ * @param {struct list_head*} HEAD - 链表头
  * @return {*}
  * @date: 2024-08-03 09:09:05
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_for_each_safe(pos, n, head)                                       \
-  for (pos = (head)->next, n = pos->next; pos != (head); pos = n, n = pos->next)
+#define LIST_FOR_EACH_SAFE(POS, N, HEAD)                                       \
+  for (POS = (HEAD)->next, N = POS->next; POS != (HEAD); POS = N, N = POS->next)
 
 /****************************************************************************************************************************************************************
- * @name: list_for_each_entry
+ * @name: LIST_FOR_EACH_ENTRY
  * @brief: 遍历链表中的结构体元素
- * @param {type*} pos - 用于遍历的指针
- * @param {struct list_head*} head - 链表头
- * @param {member} member - 成员名
+ * @param {type*} POS - 用于遍历的指针
+ * @param {struct list_head*} HEAD - 链表头
+ * @param {member} MEMBER - 成员名
  * @return {*}
  * @date: 2024-08-03 09:08:58
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_for_each_entry(pos, head, member)                                 \
-  for (pos = list_entry((head)->next, typeof(*pos), member);                   \
-       &pos->member != (head);                                                 \
-       pos = list_entry(pos->member.next, typeof(*pos), member))
+#define LIST_FOR_EACH_ENTRY(POS, HEAD, MEMBER)                                 \
+  for (POS = LIST_ENTRY((HEAD)->next, typeof(*POS), MEMBER);                   \
+       &POS->MEMBER != (HEAD);                                                 \
+       POS = LIST_ENTRY(POS->MEMBER.next, typeof(*POS), MEMBER))
 
 /****************************************************************************************************************************************************************
- * @name: list_for_each_entry_safe
+ * @name: LIST_FOR_EACH_ENTRY_SAFE
  * @brief: 遍历链表中的结构体元素，安全地删除节点
- * @param {type*} pos - 用于遍历的指针
- * @param {type*} n - 临时存储下一个节点的指针
- * @param {struct list_head*} head - 链表头
- * @param {member} member - 成员名
+ * @param {type*} POS - 用于遍历的指针
+ * @param {type*} N - 临时存储下一个节点的指针
+ * @param {struct list_head*} HEAD - 链表头
+ * @param {member} MEMBER - 成员名
  * @return {*}
  * @date: 2024-08-03 09:06:34
  * @version: 1.0
  *****************************************************************************************************************************************************************/
-#define list_for_each_entry_safe(pos, n, head, member)                         \
-  for (pos = list_entry((head)->next, typeof(*pos), member),                   \
-      n = list_entry(pos->member.next, typeof(*pos), member);                  \
-       &pos->member != (head);                                                 \
-       pos = n, n = list_entry(n->member.next, typeof(*n), member))
+#define LIST_FOR_EACH_ENTRY_SAFE(POS, N, HEAD, MEMBER)                         \
+  for (POS = LIST_ENTRY((HEAD)->next, typeof(*POS), MEMBER),                   \
+      N = LIST_ENTRY(POS->MEMBER.next, typeof(*POS), MEMBER);                  \
+       &POS->MEMBER != (HEAD);                                                 \
+       POS = N, N = LIST_ENTRY(N->MEMBER.next, typeof(*N), MEMBER))
 
 /****************************************************************************************************************************************************************
  * @name: struct list_head
@@ -321,6 +320,60 @@ static inline void list_move_tail(struct list_head *list,
                                   struct list_head *head) {
   __list_del(list->prev, list->next);
   list_add_tail(list, head);
+}
+
+/****************************************************************************************************************************************************************
+ * @name: __list_splice
+ * @brief: 将链表 `list` 插入到链表 `head` 之后
+ * @param {struct list_head*} list - 要插入的链表
+ * @param {struct list_head*} head - 链表头
+ * @return {*}
+ * @date: 2024-08-03 14:51:37
+ * @version: 1.0
+ * @note: 内部使用，不直接调用
+*****************************************************************************************************************************************************************/
+static inline void __list_splice(struct list_head *list,
+                                 struct list_head *head) {
+  struct list_head *first = list->next; // 获取插入链表的第一个节点
+  struct list_head *last = list->prev;  // 获取插入链表的最后一个节点
+  struct list_head *at = head->next;    // 获取插入位置的下一个节点
+
+  first->prev = head; // 插入链表的第一个节点的前驱指向插入位置
+  head->next = first; // 插入位置的下一个节点指向插入链表的第一个节点
+
+  last->next = at;    // 插入链表的最后一个节点的下一个节点指向插入位置的下一个节点
+  at->prev = last;    // 插入位置的下一个节点的前驱指向插入链表的最后一个节点
+}
+
+/****************************************************************************************************************************************************************
+ * @name: list_splice
+ * @brief: 将链表 `list` 插入到链表 `head` 之后
+ * @param {struct list_head*} list - 要插入的链表
+ * @param {struct list_head*} head - 链表头
+ * @return {*}
+ * @date: 2024-08-03 14:51:53
+ * @version: 1.0
+ *****************************************************************************************************************************************************************/
+static inline void list_splice(struct list_head *list, struct list_head *head) {
+  if (!list_empty(list)) // 检查插入的链表是否为空
+    __list_splice(list, head);
+}
+
+/****************************************************************************************************************************************************************
+ * @name: list_splice_init
+ * @brief: 将链表 `list` 插入到链表 `head` 之后并初始化 `list`
+ * @param {struct list_head*} list - 要插入的链表
+ * @param {struct list_head*} head - 链表头
+ * @return {*}
+ * @date: 2024-08-03 14:52:03
+ * @version: 1.0
+ *****************************************************************************************************************************************************************/
+static inline void list_splice_init(struct list_head *list,
+                                    struct list_head *head) {
+  if (!list_empty(list)) { // 检查插入的链表是否为空
+    __list_splice(list, head);
+    INIT_LIST_HEAD(list); // 初始化插入的链表
+  }
 }
 
 #endif // KERNEL_LIST_H
