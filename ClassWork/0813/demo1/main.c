@@ -9,13 +9,12 @@
  *****************************************************************************************************************************************************************/
 
 #include <dirent.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-int main(int argc, const char *argv[]) {
 
+int main(int argc, const char *argv[]) {
+  // 尝试打开指定目录
   DIR *dp = opendir("../demo1");
 
   if (dp == NULL) {
@@ -24,6 +23,9 @@ int main(int argc, const char *argv[]) {
   } else {
     printf("打开目录成功！\n");
   }
+
+  // 关闭目录
+  closedir(dp);
 
   return 0;
 }
