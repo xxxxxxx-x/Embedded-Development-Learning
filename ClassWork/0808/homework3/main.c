@@ -1,6 +1,6 @@
 /****************************************************************************************************************************************************************
  * @file         : /Code/ClassWork/0808/homework3/main.c
- * @brief        : 把一个文件中的大写字母获取出来，写入到另外一个文件中。
+ * @brief        : 作业：把一个文件中的大写字母获取出来，写入到另外一个文件中。
  * @author       : a_23456@foxmail.com
  * @date         : 2024-08-08 20:43:23
  * @version      : 1.0
@@ -8,12 +8,12 @@
  * @Copyright    : (c)   2024-2025   a_23456@foxmail.com   All Right Reserved
  *****************************************************************************************************************************************************************/
 
-#include <ctype.h>  // 包含字符处理函数的头文件
-#include <fcntl.h>  // 包含 open 函数的头文件
-#include <stdio.h>  // 包含标准输入输出的头文件
-#include <unistd.h> // 包含系统调用函数的头文件
+#include <ctype.h>   // 包含字符处理函数的头文件
+#include <fcntl.h>   // 包含 open 函数的头文件
+#include <stdio.h>   // 包含标准输入输出的头文件
+#include <unistd.h>  // 包含系统调用函数的头文件
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char* argv[]) {
   // 打开读取文件（只读模式）和写入文件（写入模式）
   int read_fd = open("read.txt", O_RDONLY);
   int write_fd = open("write.txt", O_WRONLY);
