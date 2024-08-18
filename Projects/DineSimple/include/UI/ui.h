@@ -12,6 +12,7 @@
 #define UI_H
 
 #include "../Tools/font.h"
+#include <time.h>
 
 /* 界面状态枚举 */
 typedef enum {
@@ -28,7 +29,7 @@ typedef struct {
   int *lcd_mmap;              // 映射到 LCD 的内存指针
   int input;                  // 触摸屏设备文件描述符
   font *font;                 // 字体文件描述符
-  char time_str[50];          // 用于显示时间
+  struct tm *date_time;       // 用于显示时间
   int ts_x;                   // 用于记录触摸屏的坐标X
   int ts_y;                   // 用于记录触摸屏的坐标Y
   ScreenState currentScreen;  // 当前显示的屏幕状态

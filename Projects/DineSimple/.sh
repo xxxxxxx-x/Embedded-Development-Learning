@@ -54,8 +54,8 @@ fi
 # 在目标机器上解压缩包
 echo "在远程服务器上解压缩包并执行构建..."
 sshpass -p "$SSH_PASSWORD" ssh root@192.168.46.6 "
-  tar -xvzf ~/workspace/code/$TAR_FILE -C ~/workspace/code &&
-  rm ~/workspace/code/$TAR_FILE
+    tar -xvzf ~/workspace/code/$TAR_FILE -C ~/workspace/code &&
+    rm ~/workspace/code/$TAR_FILE
 "
 if [ $? -ne 0 ]; then
     echo "解压缩或删除压缩包失败。"

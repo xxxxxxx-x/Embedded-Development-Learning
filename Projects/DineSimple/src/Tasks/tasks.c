@@ -9,92 +9,19 @@
  *****************************************************************************************************************************************************************/
 
 #include "../../include/Tasks/tasks.h"
-#include <fcntl.h>
-#include <linux/input-event-codes.h>
-#include <linux/input.h>
-#include <pthread.h>  // 引入 POSIX 线程库头文件
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include "../../include/UI/ui.h"
+#include <string.h>
 
-/****************************************************************************************************************************************************************
- * @name: ts_task
- * @brief: 读取触摸屏输入事件并处理触摸坐标
- * @param {void*} arg - 参数是一个指向 UI 结构体的指针
- * @return {void} - 无返回值
- * @date: 2024-08-16 14:47:30
- * @version: 1.2
- * @note: 该函数会持续运行，实时处理触摸事件和更新坐标
- *****************************************************************************************************************************************************************/
-void ts_task(void* arg) {
-  // 将参数转换为 UI* 类型的指针
-  UI* ui = (UI*)arg;
+// 初始化线程数组和计数器
+Thread thread_array[MAX_THREADS];
+int thread_count = 0;
 
-  // 无限循环读取触摸屏输入事件
-  while (1) {
-    struct input_event input_event;
+// 条件变量和互斥锁的定义和初始化
+pthread_cond_t screen_cond = PTHREAD_COND_INITIALIZER;  // 条件变量初始化
+pthread_mutex_t screen_mutex = PTHREAD_MUTEX_INITIALIZER;  // 互斥锁初始化
 
-    // 从设备文件中读取输入事件
-    ssize_t bytes_read = read(ui->input, &input_event, sizeof(input_event));
-    if (bytes_read < 0) {
-      perror("读取输入触摸事件失败");
-      close(ui->input);
-      return;
-    }
-
-    // 临时存储触摸坐标
-    static int x = -1, y = -1;
-
-    // 处理 X 轴触摸事件
-    if (input_event.type == EV_ABS && input_event.code == ABS_X) {
-      x = 800 * input_event.value / 1024;  // 将原始 X 轴值转换为屏幕坐标
-    }
-
-    // 处理 Y 轴触摸事件
-    if (input_event.type == EV_ABS && input_event.code == ABS_Y) {
-      y = 480 * input_event.value / 600;  // 将原始 Y 轴值转换为屏幕坐标
-    }
-
-    // 处理按键事件
-    if (input_event.type == EV_KEY && input_event.code == BTN_TOUCH) {
-      if (input_event.value == 1) {  // 触摸按下事件
-        ui->ts_x = x;                // 更新 X 坐标
-        ui->ts_y = y;                // 更新 Y 坐标
-        // printf("x:%d y:%d\n", ui->ts_x, ui->ts_y);
-      }
-      // 可以选择在触摸松开事件中添加其他逻辑
-    }
-  }
-
-  return;
-}
-
-/****************************************************************************************************************************************************************
- * @name: ts_get_time
- * @brief: 获取当前时间并更新 UI 显示
- * @param {void*} arg - 参数是一个指向 UI 结构体的指针
- * @return {void} - 无返回值
- * @date: 2024-08-16 14:47:30
- * @version: 1.0
- * @note: 该函数会持续运行，定时更新 UI 显示的时间
- *****************************************************************************************************************************************************************/
-void ts_get_time(void* arg) {
-  UI* ui = (UI*)arg;
-
-  // 无限循环更新时间
-  while (1) {
-    time_t now = time(NULL);
-    struct tm* local_time = localtime(&now);
-    strftime(ui->time_str, sizeof(ui->time_str), "%Y-%m-%d %H:%M:%S",
-             local_time);
-
-    // 更新 UI 显示时间
-    // 这里可以添加代码来刷新 UI 上的时间显示
-
-    sleep(1);  // 每秒更新一次
-  }
-}
 
 /****************************************************************************************************************************************************************
  * @name: create_thread
@@ -102,13 +29,18 @@ void ts_get_time(void* arg) {
  * @param {void (*thread_func)(void *)} thread_func -
  *线程函数的指针，该函数接受一个 void* 类型的参数，并没有返回值
  * @param {void*} arg - 传递给线程函数的参数
- * @return {void} - 无返回值
+ * @param {const char*} name - 线程名称
+ * @param {int} group_id - 线程组标识符
+ * @return {pthread_t} - 返回创建的线程标识符
  * @date: 2024-08-16 14:26:41
- * @version: 1.0
+ * @version: 1.1
  * @note:
- *该函数使用指定的线程函数和参数创建一个新的线程，并启动该线程。如果线程创建失败，会打印错误信息并终止程序。
+ * 该函数使用指定的线程函数、参数、名称和组ID创建一个新的线程，并启动该线程。如果线程创建失败，会打印错误信息并终止程序。
  *****************************************************************************************************************************************************************/
-void create_thread(void (*thread_func)(void*), void* arg) {
+pthread_t create_thread(void (*thread_func)(void*),
+                        void* arg,
+                        const char* name,
+                        int group_id) {
   pthread_t thread;
 
   // 创建线程并启动执行
@@ -116,5 +48,92 @@ void create_thread(void (*thread_func)(void*), void* arg) {
     perror("创建线程失败");
     exit(EXIT_FAILURE);
   }
-  printf("线程函数 %p 添加成功\n", thread_func);
+
+  // 保存线程信息
+  if (thread_count < MAX_THREADS) {
+    thread_array[thread_count].thread_id = thread;
+    thread_array[thread_count].thread_func = thread_func;
+    thread_array[thread_count].arg = arg;
+    strncpy(thread_array[thread_count].name, name,
+            sizeof(thread_array[thread_count].name) - 1);
+    thread_array[thread_count]
+        .name[sizeof(thread_array[thread_count].name) - 1] =
+        '\0';  // 确保名称以 null 结尾
+    thread_array[thread_count].group_id = group_id;
+
+    thread_count++;
+  } else {
+    fprintf(stderr, "线程数组已满，无法添加新线程。\n");
+  }
+
+  printf("成功添加函数 %p 到线程中\n", thread_func);
+  return thread;
+}
+
+/****************************************************************************************************************************************************************
+ * @name: destroy_thread
+ * @brief: 销毁一个已经创建完成且在运行中的线程
+ * @param {pthread_t} thread - 要销毁的线程标识符
+ * @return {void} - 无返回值
+ * @date: 2024-08-17
+ * @version: 1.0
+ * @note:
+ * 该函数使用线程标识符销毁一个已经创建完成且在运行中的线程。如果线程销毁失败，会打印错误信息并终止程序。
+ *****************************************************************************************************************************************************************/
+void destroy_thread(pthread_t thread) {
+  int result = pthread_cancel(thread);
+  if (result != 0) {
+    fprintf(stderr, "错误: 无法取消线程。\n");
+    exit(EXIT_FAILURE);
+  }
+
+  result = pthread_join(thread, NULL);
+  if (result != 0) {
+    fprintf(stderr, "错误: 无法加入线程。\n");
+    exit(EXIT_FAILURE);
+  }
+}
+
+/****************************************************************************************************************************************************************
+ * @name: find_thread_by_name
+ * @brief: 根据线程名称查找线程标识符
+ * @param {const char*} name - 线程名称
+ * @return {pthread_t} - 线程标识符，如果找不到返回 NULL
+ * @date: 2024-08-17
+ * @version: 1.0
+ * @note:
+ * 该函数遍历线程数组，查找具有指定名称的线程，并返回其标识符。如果没有找到对应的线程，返回
+ *NULL。
+ *****************************************************************************************************************************************************************/
+pthread_t find_thread_by_name(const char* name) {
+  for (int i = 0; i < thread_count; ++i) {
+    if (strcmp(thread_array[i].name, name) == 0) {
+      return thread_array[i].thread_id;
+    }
+  }
+  return (pthread_t)NULL;
+}
+
+/****************************************************************************************************************************************************************
+ * @name: destroy_threads_by_group
+ * @brief: 销毁指定线程组的所有线程
+ * @param {int} group_id - 线程组标识符
+ * @return {void} - 无返回值
+ * @date: 2024-08-17
+ * @version: 1.0
+ * @note:
+ * 该函数遍历线程数组，销毁所有属于指定线程组的线程。
+ *****************************************************************************************************************************************************************/
+void destroy_threads_by_group(int group_id) {
+  for (int i = 0; i < thread_count; ++i) {
+    if (thread_array[i].group_id == group_id) {
+      destroy_thread(thread_array[i].thread_id);
+      // 删除线程后移动后续线程
+      for (int j = i; j < thread_count - 1; ++j) {
+        thread_array[j] = thread_array[j + 1];
+      }
+      thread_count--;  // 减少线程计数器
+      i--;             // 调整索引以处理移除后的线程
+    }
+  }
 }

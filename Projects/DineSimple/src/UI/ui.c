@@ -16,8 +16,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "../../include/Server/server.h"
+#include "../../include/Tasks/tasks.h"
 #include "../../include/Tools/tools.h"
 #include "../../include/UI/ui_callbacks.h"
+#include "../../include/UI/ui_tasks.h"
 
 /****************************************************************************************************************************************************************
  * @name: show_boot_animation
@@ -37,7 +39,7 @@ void show_boot_animation(UI* ui, const char* frame_path, int frame_count) {
 
   fill_screen_with_color(ui->lcd_mmap, 0x000000);
 
-  const int total_duration_us = 1500000;  // 总动画时间（微秒）
+  const int total_duration_us = 1000000;  // 总动画时间（微秒）
   int frame_duration_us =
       total_duration_us / frame_count;  // 每帧显示时间（微秒）
 
@@ -61,24 +63,24 @@ void show_boot_animation(UI* ui, const char* frame_path, int frame_count) {
  * @note: 该函数负责显示欢迎页，并处理触摸事件和时间显示
  *****************************************************************************************************************************************************************/
 void show_WelcomeScreen(UI* ui) {
-  // 更新上一页的屏幕状态为当前状态，防止重复调用该函数
-  ui->previousScreen = WELCOME_SCREEN;
-
   // 显示欢迎页的位图
   show_bitmap(ui->lcd_mmap, "./resources/images/WELCOME_SCREEN.bmp", 0, 0, 1);
 
   // 绑定触摸事件
-  bind_touch_event(394, 768, 109, 207,
-                   welcome_start_order_callback);  // 开始点餐按钮
-  bind_touch_event(394, 768, 209, 307,
-                   welcome_user_login_callback);  // 用户登录按钮
-  bind_touch_event(394, 768, 309, 407,
-                   welcome_shop_login_callback);  // 商家登录按钮
+  bind_touch_event(394, 768, 109, 207, welcome_start_order_callback,
+                   ui);  // 开始点餐按钮
+  bind_touch_event(394, 768, 209, 307, welcome_user_login_callback,
+                   ui);  // 用户登录按钮
+  bind_touch_event(394, 768, 309, 407, welcome_shop_login_callback,
+                   ui);  // 商家登录按钮
 
   // 添加右上角时间显示
-  // show_text(ui->lcd_mmap, ui->font, char* text, 32, 0, 0, 100, 100, 200, 100,
-  // 0,
-  //           0);
+  create_thread(welcome_display_time_tasks, ui, "welcome_display_time_tasks",
+                1);
+
+  // 加载广告
+  create_thread(welcome_display_time_tasks, ui, "welcome_display_time_tasks",
+                1);
 }
 
 /****************************************************************************************************************************************************************

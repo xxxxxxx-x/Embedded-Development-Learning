@@ -1,9 +1,9 @@
 /****************************************************************************************************************************************************************
- * @file         : /Code/Projects/DineSimple/include/Server/server.h
+ * @file         : /DineSimple/include/Server/server.h
  * @brief        : 处理触摸事件和事件绑定
  * @author       : a_23456@foxmail.com
  * @date         : 2024-08-16 16:24:27
- * @version      : 1.0
+ * @version      : 1.1
  * @note         : 定义了触摸事件处理和绑定函数
  * @Copyright    : (c)   2024-2025   a_23456@foxmail.com   All Right Reserved
  *****************************************************************************************************************************************************************/
@@ -23,6 +23,7 @@ typedef struct {
   int start_y;            // 触摸区域起始 Y 坐标
   int end_y;              // 触摸区域结束 Y 坐标
   TouchCallback callback; // 触摸事件回调函数
+  void *param;            // 传递给回调函数的参数
 } TouchRegion;
 
 #define MAX_TOUCH_REGIONS 10
@@ -39,11 +40,12 @@ extern int touchRegionCount;
  * @param {int} start_y - 触摸区域起始 Y 坐标
  * @param {int} end_y - 触摸区域结束 Y 坐标
  * @param {TouchCallback} callback - 触摸事件回调函数
+ * @param {void*} param - 传递给回调函数的参数
  * @return: void
  * @note: 该函数负责绑定触摸事件，使得程序可以响应用户的触摸操作
  *****************************************************************************************************************************************************************/
 void bind_touch_event(int start_x, int end_x, int start_y, int end_y,
-                      TouchCallback callback);
+                      TouchCallback callback, void *param);
 
 /****************************************************************************************************************************************************************
  * @name: destroy_event
